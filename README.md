@@ -13,6 +13,7 @@ CiviCRM Eavesdropper: Everything functionally related to logging in Redis.
 
 - PHP v7.0+
 - CiviCRM 5.0
+- Redis 4.0
 
 ## Configuration
 
