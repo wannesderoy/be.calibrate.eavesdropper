@@ -25,6 +25,8 @@
  +--------------------------------------------------------------------+
  */
 
+use CRM\Eavesdropper\Client\PhpRedis;
+
 /**
  * Class CRM_Core_Error_Log
  *
@@ -33,23 +35,42 @@
 class CRM_Core_Error_Log extends \Psr\Log\AbstractLogger {
 
   /**
-   * @var \Redis
+   * @var \CRM\Eavesdropper\Client\PhpRedis;
    */
   protected $redis;
+
+  /**
+   * @var \Redis
+   */
+  protected $client;
 
   /**
    * String containing the redis host, defaults to redis
    *
    * @var string
    */
-  protected $redis_host = 'redis';
+  protected $redis_host;
 
   /**
    * Int containing the redis port, defaults to default redis port 6379
    *
    * @var int
    */
-  protected $redis_port = 6379;
+  protected $redis_port;
+
+  /**
+   * Redis default database: will select none (Database 0).
+   *
+   * @var int
+   */
+  protected $redis_base;
+
+  /**
+   * String containing the password to access Redis.
+   *
+   * @var int
+   */
+  protected $redis_password;
 
   /**
    * CRM_Core_Error_Log constructor.
@@ -66,14 +87,25 @@ class CRM_Core_Error_Log extends \Psr\Log\AbstractLogger {
       \Psr\Log\LogLevel::EMERGENCY => PEAR_LOG_EMERG,
     );
 
-    $config = CRM_Core_BAO_Setting::getItem('eavesdropper', 'eavesdropper-settings');
-    if ($config != NULL) {
-      $config = json_decode(utf8_decode($this->config), TRUE);
-      $this->redis_host = $config['eavesdropper_redis_host'];
-      $this->redis_port = $config['eavesdropper_redis_port'];
+    if (defined('CIVICRM_REDIS_LOG_HOST') && defined('CIVICRM_REDIS_LOG_PORT')) {
+      $this->redis_host = CIVICRM_REDIS_LOG_HOST;
+      $this->redis_port = CIVICRM_REDIS_LOG_PORT;
+      $this->redis_base = empty(CIVICRM_REDIS_LOG_BASE) ? NULL : CIVICRM_REDIS_LOG_BASE;
+      $this->redis_password = empty(CIVICRM_REDIS_LOG_PASSWORD) ? NULL : CIVICRM_REDIS_LOG_PASSWORD;
+    }
+    else {
+      $config = CRM_Core_BAO_Setting::getItem('eavesdropper', 'eavesdropper-settings');
+      if ($config != NULL) {
+        $config = json_decode(utf8_decode($this->config), TRUE);
+        $this->redis_host = $config['eavesdropper_redis_host'];
+        $this->redis_port = $config['eavesdropper_redis_port'];
+        $this->redis_base = $config['eavesdropper_redis_password'];
+        $this->redis_password = $config['eavesdropper_redis_base'];
+      }
     }
 
-    $this->redis = $this->getRedisClient($this->redis_host, $this->redis_port);
+    $this->redis = new PhpRedis();
+    $this->client = $this->redis->getClient($this->redis_host, $this->redis_port, $this->redis_base, $this->redis_password);
   }
 
   /**
@@ -97,29 +129,13 @@ class CRM_Core_Error_Log extends \Psr\Log\AbstractLogger {
       }
     }
 
-    if ($this->redis) {
-      $this->redis->rPush("civicrm:logs:eavesdropper:{$level}", serialize($message));
+    if ($this->client) {
+      $this->client->rPush("civicrm:logs:eavesdropper:{$level}", serialize($message));
     }
     else {
       // Fallback to default logging.
       CRM_Core_Error::debug_log_message($message, FALSE, '', $this->map[$level]);
     }
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getRedisClient($host = NULL, $port = NULL) {
-    $client = new \Redis();
-
-    $client->connect($host, $port);
-
-    // Do not allow PhpRedis serialize itself data, we are going to do it
-    // ourself. This will ensure less memory footprint on Redis size when
-    // we will attempt to store small values.
-    $client->setOption(\Redis::OPT_SERIALIZER, \Redis::SERIALIZER_NONE);
-
-    return $client;
   }
 
 }

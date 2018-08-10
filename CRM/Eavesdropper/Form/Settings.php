@@ -15,8 +15,11 @@ class CRM_Eavesdropper_Form_Settings extends CRM_Core_Form {
       $values = json_decode(utf8_decode($defaults), TRUE);
     }
     else {
-      $values['eavesdropper_redis_host'] = "redis";
-      $values['eavesdropper_redis_port'] = '6379';
+      $values = [];
+      $values['eavesdropper_redis_host'] = NULL;
+      $values['eavesdropper_redis_port'] = NULL;
+      $values['eavesdropper_redis_base'] = NULL;
+      $values['eavesdropper_redis_password'] = NULL;
     }
 
     // add form elements
@@ -32,6 +35,20 @@ class CRM_Eavesdropper_Form_Settings extends CRM_Core_Form {
       'eavesdropper_redis_port',
       'Redis port',
       ['value' => $values['eavesdropper_redis_port']],
+      TRUE
+    );
+    $this->add(
+      'text',
+      'eavesdropper_redis_base',
+      'Redis database',
+      ['value' => $values['eavesdropper_redis_base']],
+      TRUE
+    );
+    $this->add(
+      'text',
+      'eavesdropper_redis_password',
+      'Redis password',
+      ['value' => $values['eavesdropper_redis_password']],
       TRUE
     );
 
@@ -55,6 +72,8 @@ class CRM_Eavesdropper_Form_Settings extends CRM_Core_Form {
     $values = $this->controller->exportValues($this->_name);
     $credentials['eavesdropper_redis_host'] = $values['eavesdropper_redis_host'];
     $credentials['eavesdropper_redis_port'] = $values['eavesdropper_redis_port'];
+    $credentials['eavesdropper_redis_base'] = $values['eavesdropper_redis_base'];
+    $credentials['eavesdropper_redis_password'] = $values['eavesdropper_redis_password'];
     $encode = json_encode($credentials);
     CRM_Core_BAO_Setting::setItem($encode, 'eavesdropper', 'eavesdropper-settings');
   }

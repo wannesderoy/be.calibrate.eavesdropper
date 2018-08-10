@@ -24,4 +24,7 @@
   <civix>
     <namespace>CRM/Eavesdropper</namespace>
   </civix>
+  <classloader>
+    <psr4 prefix='CRM\Eavesdropper\' path='CRM/Eavesdropper'/>
+  </classloader>
 </extension>
