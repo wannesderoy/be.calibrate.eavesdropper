@@ -20,7 +20,10 @@ class CRM_Eavesdropper_Form_Settings extends CRM_Core_Form {
       $values['eavesdropper_redis_port'] = NULL;
       $values['eavesdropper_redis_base'] = NULL;
       $values['eavesdropper_redis_password'] = NULL;
+      $values['eavesdropper_severity_limit'] = NULL;
     }
+
+    \Civi::log()->alert("Settings page loaded");
 
     // add form elements
     $this->add(
@@ -52,6 +55,31 @@ class CRM_Eavesdropper_Form_Settings extends CRM_Core_Form {
       TRUE
     );
 
+    // Set severity log limit
+    $oClass = new ReflectionClass('Psr\Log\LogLevel');
+    $levels = $oClass->getConstants();
+
+    $select = $this->add(
+      'select',
+      'eavesdropper_severity_limit',
+      'Severity level to log from',
+      $levels,
+      TRUE
+    );
+    $select->setSelected(($values['eavesdropper_severity_limit'] !== NULL) ?: 'DEBUG');
+
+    // @TODO: Add ability to set a TTL per severity level.
+//    foreach ($levels as $level) {
+//      $this->add(
+//        'select',
+//        'eavesdropper_severity_limit',
+//        'Severity level to log from',
+//        $lvels,
+//        ['value' => $values['eavesdropper_severity_limit'] ?? 'ERROR'],
+//        TRUE
+//      );
+//    }
+
     $this->addButtons(array(
       array(
         'type' => 'submit',
@@ -74,6 +102,7 @@ class CRM_Eavesdropper_Form_Settings extends CRM_Core_Form {
     $credentials['eavesdropper_redis_port'] = $values['eavesdropper_redis_port'];
     $credentials['eavesdropper_redis_base'] = $values['eavesdropper_redis_base'];
     $credentials['eavesdropper_redis_password'] = $values['eavesdropper_redis_password'];
+    $credentials['eavesdropper_severity_limit'] = $values['eavesdropper_severity_limit'];
     $encode = json_encode($credentials);
     CRM_Core_BAO_Setting::setItem($encode, 'eavesdropper', 'eavesdropper-settings');
   }

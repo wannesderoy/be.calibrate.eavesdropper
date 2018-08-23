@@ -73,10 +73,17 @@ class CRM_Core_Error_Log extends \Psr\Log\AbstractLogger {
   protected $redis_password;
 
   /**
+   * String containing minimum severity to log to Redis.
+   *
+   * @var int
+   */
+  protected $severity_limit;
+
+  /**
    * CRM_Core_Error_Log constructor.
    */
   public function __construct() {
-    $this->map = array(
+    $this->map = [
       \Psr\Log\LogLevel::DEBUG => PEAR_LOG_DEBUG,
       \Psr\Log\LogLevel::INFO => PEAR_LOG_INFO,
       \Psr\Log\LogLevel::NOTICE => PEAR_LOG_NOTICE,
@@ -85,13 +92,15 @@ class CRM_Core_Error_Log extends \Psr\Log\AbstractLogger {
       \Psr\Log\LogLevel::CRITICAL => PEAR_LOG_CRIT,
       \Psr\Log\LogLevel::ALERT => PEAR_LOG_ALERT,
       \Psr\Log\LogLevel::EMERGENCY => PEAR_LOG_EMERG,
-    );
+    ];
 
-    if (defined('CIVICRM_REDIS_LOG_HOST') && defined('CIVICRM_REDIS_LOG_PORT')) {
-      $this->redis_host = CIVICRM_REDIS_LOG_HOST;
-      $this->redis_port = CIVICRM_REDIS_LOG_PORT;
-      $this->redis_base = empty(CIVICRM_REDIS_LOG_BASE) ? NULL : CIVICRM_REDIS_LOG_BASE;
-      $this->redis_password = empty(CIVICRM_REDIS_LOG_PASSWORD) ? NULL : CIVICRM_REDIS_LOG_PASSWORD;
+    // Get the necessary config from either destination.
+    if (defined('CIVICRM_EAVESDROPPER_REDIS_HOST') && defined('CIVICRM_EAVESDROPPER_REDIS_PORT')) {
+      $this->redis_host = CIVICRM_EAVESDROPPER_REDIS_HOST;
+      $this->redis_port = CIVICRM_EAVESDROPPER_REDIS_PORT;
+      $this->redis_password = CIVICRM_EAVESDROPPER_REDIS_PASSWORD;
+      $this->redis_base = CIVICRM_EAVESDROPPER_REDIS_BASE;
+      $this->severity_limit = strtolower(CIVICRM_EAVESDROPPER_SEVERITY_LIMIT);
     }
     else {
       $config = CRM_Core_BAO_Setting::getItem('eavesdropper', 'eavesdropper-settings');
@@ -101,9 +110,11 @@ class CRM_Core_Error_Log extends \Psr\Log\AbstractLogger {
         $this->redis_port = $config['eavesdropper_redis_port'];
         $this->redis_base = $config['eavesdropper_redis_password'];
         $this->redis_password = $config['eavesdropper_redis_base'];
+        $this->severity_limit = strtolower($config['eavesdropper_severity_limit']);
       }
     }
 
+    // Get the Redis Client
     $this->redis = new PhpRedis();
     $this->client = $this->redis->getClient($this->redis_host, $this->redis_port, $this->redis_base, $this->redis_password);
   }
@@ -115,9 +126,7 @@ class CRM_Core_Error_Log extends \Psr\Log\AbstractLogger {
    * @param string $message
    * @param array $context
    */
-  public function log($level, $message, array $context = array()) {
-    // FIXME: This flattens a $context a bit prematurely. When integrating
-    // with external/CMS logs, we should pass through $context.
+  public function log($level, $message, array $context = []) {
     if (!empty($context)) {
       if (isset($context['exception'])) {
         $context['exception'] = CRM_Core_Error::formatTextException($context['exception']);
@@ -129,13 +138,19 @@ class CRM_Core_Error_Log extends \Psr\Log\AbstractLogger {
       }
     }
 
-    if ($this->client) {
-      $this->client->rPush("civicrm:logs:eavesdropper:{$level}", serialize($message));
+    // Check for severity level log limit, to only log from a certain level.
+    $limit = $this->map[$this->severity_limit];
+    $level_key = $this->map[$level];
+    if ($limit >= $level_key) {
+      if ($this->client) {
+        $this->client->rPush("civicrm:logs:eavesdropper:{$level}", serialize($message));
+      }
+      else {
+        // Fallback to default logging.
+        CRM_Core_Error::debug_log_message($message, FALSE, '', $this->map[$level]);
+      }
     }
-    else {
-      // Fallback to default logging.
-      CRM_Core_Error::debug_log_message($message, FALSE, '', $this->map[$level]);
-    }
+
   }
 
 }
