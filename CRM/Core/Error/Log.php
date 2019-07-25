@@ -99,8 +99,8 @@ class CRM_Core_Error_Log extends \Psr\Log\AbstractLogger {
         $config = json_decode(utf8_decode($this->config), TRUE);
         $this->redis_host = $config['eavesdropper_redis_host'];
         $this->redis_port = $config['eavesdropper_redis_port'];
-        $this->redis_base = $config['eavesdropper_redis_password'];
-        $this->redis_password = $config['eavesdropper_redis_base'];
+        $this->redis_base = $config['eavesdropper_redis_base'];
+        $this->redis_password = $config['eavesdropper_redis_password'];
       }
     }
 
