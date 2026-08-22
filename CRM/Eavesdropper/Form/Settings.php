@@ -10,7 +10,7 @@ use CRM_Eavesdropper_ExtensionUtil as E;
 class CRM_Eavesdropper_Form_Settings extends CRM_Core_Form {
 
   public function buildQuickForm() {
-    $defaults = CRM_Core_BAO_Setting::getItem('eavesdropper', 'eavesdropper-settings');
+    $defaults = Civi::settings()->get('eavesdropper-settings');
     if ($defaults != NULL) {
       $values = json_decode(utf8_decode($defaults), TRUE);
     }
