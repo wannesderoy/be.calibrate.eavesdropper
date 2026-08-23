@@ -94,7 +94,7 @@ class CRM_Core_Error_Log extends \Psr\Log\AbstractLogger {
       $this->redis_password = empty(CIVICRM_REDIS_LOG_PASSWORD) ? NULL : CIVICRM_REDIS_LOG_PASSWORD;
     }
     else {
-      $config = CRM_Core_BAO_Setting::getItem('eavesdropper', 'eavesdropper-settings');
+      $config = Civi::settings()->get('eavesdropper-settings');
       if ($config != NULL) {
         $config = json_decode(utf8_decode($this->config), TRUE);
         $this->redis_host = $config['eavesdropper_redis_host'];

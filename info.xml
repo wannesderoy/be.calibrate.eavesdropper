@@ -18,13 +18,13 @@
   <version>1.0</version>
   <develStage>Beta</develStage>
   <compatibility>
-    <ver>5.4</ver>
+    <ver>5.7</ver>
   </compatibility>
   <comments>Requires a running Redis instance</comments>
   <civix>
     <namespace>CRM/Eavesdropper</namespace>
   </civix>
   <classloader>
-    <psr4 prefix='CRM\Eavesdropper\' path='CRM/Eavesdropper'/>
+    <psr4 prefix="CRM\Eavesdropper\" path="CRM/Eavesdropper"/>
   </classloader>
 </extension>
