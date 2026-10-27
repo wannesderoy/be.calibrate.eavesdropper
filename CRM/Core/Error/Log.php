@@ -76,7 +76,7 @@ class CRM_Core_Error_Log extends \Psr\Log\AbstractLogger {
    * CRM_Core_Error_Log constructor.
    */
   public function __construct() {
-    $this->map = array(
+    $this->map = [
       \Psr\Log\LogLevel::DEBUG => PEAR_LOG_DEBUG,
       \Psr\Log\LogLevel::INFO => PEAR_LOG_INFO,
       \Psr\Log\LogLevel::NOTICE => PEAR_LOG_NOTICE,
@@ -85,7 +85,7 @@ class CRM_Core_Error_Log extends \Psr\Log\AbstractLogger {
       \Psr\Log\LogLevel::CRITICAL => PEAR_LOG_CRIT,
       \Psr\Log\LogLevel::ALERT => PEAR_LOG_ALERT,
       \Psr\Log\LogLevel::EMERGENCY => PEAR_LOG_EMERG,
-    );
+    ];
 
     if (defined('CIVICRM_REDIS_LOG_HOST') && defined('CIVICRM_REDIS_LOG_PORT')) {
       $this->redis_host = CIVICRM_REDIS_LOG_HOST;
@@ -115,7 +115,7 @@ class CRM_Core_Error_Log extends \Psr\Log\AbstractLogger {
    * @param string $message
    * @param array $context
    */
-  public function log($level, $message, array $context = array()) {
+  public function log($level, $message, array $context = []) {
     // FIXME: This flattens a $context a bit prematurely. When integrating
     // with external/CMS logs, we should pass through $context.
     if (!empty($context)) {
