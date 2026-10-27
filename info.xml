@@ -18,13 +18,21 @@
   <version>1.0</version>
   <develStage>Beta</develStage>
   <compatibility>
-    <ver>5.7</ver>
+    <ver>5.51</ver>
   </compatibility>
   <comments>Requires a running Redis instance</comments>
   <civix>
     <namespace>CRM/Eavesdropper</namespace>
+    <format>25.10.1</format>
   </civix>
   <classloader>
+    <psr0 prefix="CRM_" path="."/>
     <psr4 prefix="CRM\Eavesdropper\" path="CRM/Eavesdropper"/>
+    <psr4 prefix="Civi\" path="Civi"/>
   </classloader>
+  <mixins>
+    <mixin>menu-xml@1.0.0</mixin>
+    <mixin>smarty-v2@1.0.3</mixin>
+    <mixin>scan-classes@1.0.0</mixin>
+  </mixins>
 </extension>
